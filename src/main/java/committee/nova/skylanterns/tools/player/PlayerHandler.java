@@ -3,12 +3,12 @@ package committee.nova.skylanterns.tools.player;
 import committee.nova.skylanterns.common.entities.SkyLanternEntity;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
 
-@Mod.EventBusSubscriber
+@EventBusSubscriber
 public class PlayerHandler {
     @SubscribeEvent
     public static void onPlayerInteractEntity(PlayerInteractEvent.EntityInteract event) {

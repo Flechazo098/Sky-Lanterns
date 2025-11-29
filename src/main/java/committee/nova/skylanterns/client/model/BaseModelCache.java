@@ -4,7 +4,7 @@ import committee.nova.skylanterns.SkyLanterns;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.client.event.ModelEvent;
+import net.neoforged.neoforge.client.event.ModelEvent;
 
 import java.util.Map;
 import java.util.function.Function;

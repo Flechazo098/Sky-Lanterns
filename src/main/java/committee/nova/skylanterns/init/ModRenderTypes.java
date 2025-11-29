@@ -16,6 +16,7 @@ import net.minecraft.resources.ResourceLocation;
  */
 public class ModRenderTypes {
     public static ShaderInstance LANTERN_SHADER;
+
     public static RenderType glowing(ResourceLocation texture) {
         return RenderType.create(
                 "sky_lantern_glow",
@@ -25,11 +26,14 @@ public class ModRenderTypes {
                 false,
                 true,
                 RenderType.CompositeState.builder()
-                        .setShaderState(new RenderStateShard.ShaderStateShard(GameRenderer::getPositionColorTexLightmapShader))
-                        .setLightmapState(new RenderStateShard.LightmapStateShard(false))
+                        .setShaderState(new RenderStateShard.ShaderStateShard(GameRenderer::getRendertypeEntityTranslucentShader))
                         .setTextureState(new RenderStateShard.TextureStateShard(texture, false, false))
                         .setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
                         .setCullState(RenderStateShard.NO_CULL)
+                        .setLightmapState(new RenderStateShard.LightmapStateShard(true))
+                        .setOverlayState(new RenderStateShard.OverlayStateShard(true))
+                        .setWriteMaskState(RenderStateShard.COLOR_DEPTH_WRITE)
+                        .setDepthTestState(RenderStateShard.LEQUAL_DEPTH_TEST)
                         .createCompositeState(false)
         );
     }
@@ -37,16 +41,20 @@ public class ModRenderTypes {
     public static RenderType lanternGlow() {
         return RenderType.create(
                 "lantern_glow_quad",
-                DefaultVertexFormat.POSITION_COLOR_TEX,
+                DefaultVertexFormat.POSITION_TEX_COLOR,
                 VertexFormat.Mode.QUADS,
                 256,
                 false,
                 true,
                 RenderType.CompositeState.builder()
-                        .setShaderState(new RenderStateShard.ShaderStateShard(() -> LANTERN_SHADER != null ? LANTERN_SHADER : GameRenderer.getPositionColorTexShader()))
-                        .setTextureState(RenderStateShard.NO_TEXTURE)
-                        .setTransparencyState(RenderStateShard.ADDITIVE_TRANSPARENCY)
+                        .setShaderState(new RenderStateShard.ShaderStateShard(() -> LANTERN_SHADER != null ? LANTERN_SHADER : GameRenderer.getPositionTexColorShader()))
+                        .setTextureState(new RenderStateShard.TextureStateShard(ResourceLocation.withDefaultNamespace("textures/misc/white.png"), true, false))
+                        .setTransparencyState(RenderStateShard.LIGHTNING_TRANSPARENCY)
                         .setCullState(RenderStateShard.NO_CULL)
+                        .setLightmapState(new RenderStateShard.LightmapStateShard(true))
+                        .setOverlayState(new RenderStateShard.OverlayStateShard(false))
+                        .setWriteMaskState(RenderStateShard.COLOR_WRITE)
+                        .setDepthTestState(RenderStateShard.LEQUAL_DEPTH_TEST)
                         .createCompositeState(false)
         );
     }

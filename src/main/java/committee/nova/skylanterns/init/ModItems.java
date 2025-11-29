@@ -4,10 +4,9 @@ import committee.nova.skylanterns.SkyLanterns;
 import committee.nova.skylanterns.common.items.SkyLanternsItem;
 import committee.nova.skylanterns.utils.EnumColor;
 import net.minecraft.world.item.Item;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.registries.DeferredItem;
+import net.neoforged.neoforge.registries.DeferredRegister;
 
 /**
  * Description:
@@ -16,11 +15,11 @@ import net.minecraftforge.registries.RegistryObject;
  * Version: 1.0
  */
 public class ModItems {
-    public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, SkyLanterns.MOD_ID);
+    public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(SkyLanterns.MOD_ID);
 
-    public static final RegistryObject<Item> SKY_LANTERN_ORANGE = ITEMS.register("sky_lantern_orange",
+    public static final DeferredItem<Item> SKY_LANTERN_ORANGE = ITEMS.register("sky_lantern_orange",
             () -> new SkyLanternsItem(EnumColor.ORANGE));
-    public static final RegistryObject<Item> SKY_LANTERN_PINK = ITEMS.register("sky_lantern_pink",
+    public static final DeferredItem<Item> SKY_LANTERN_PINK = ITEMS.register("sky_lantern_pink",
             () -> new SkyLanternsItem(EnumColor.BRIGHT_PINK));
 
     public static void register(IEventBus modEventBus) {

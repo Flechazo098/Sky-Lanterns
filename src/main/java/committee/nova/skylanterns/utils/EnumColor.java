@@ -6,7 +6,7 @@ import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.common.Tags;
+import net.neoforged.neoforge.common.Tags;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;

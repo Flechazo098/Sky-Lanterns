@@ -7,6 +7,7 @@ import it.unimi.dsi.fastutil.floats.FloatConsumer;
 import it.unimi.dsi.fastutil.ints.Int2ObjectFunction;
 import it.unimi.dsi.fastutil.shorts.ShortConsumer;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -14,8 +15,9 @@ import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidStack;
 
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.DoubleConsumer;
@@ -137,22 +139,29 @@ public class TagUtils {
     }
 
     public static void setBlockPosIfPresent(CompoundTag tag, String key, Consumer<BlockPos> setter) {
-        if (tag.contains(key, Tag.TAG_COMPOUND)) {
-            setter.accept(NbtUtils.readBlockPos(tag.getCompound(key)));
+        if (tag.contains(key, Tag.TAG_INT_ARRAY)) {
+            Optional<BlockPos> pos = NbtUtils.readBlockPos(tag, key);
+            pos.ifPresent(setter);
         }
     }
 
 
-    public static void setFluidStackIfPresent(CompoundTag tag, String key, Consumer<FluidStack> setter) {
+    public static void setFluidStackIfPresent(
+            HolderLookup.Provider registries,
+            CompoundTag tag,
+            String key,
+            Consumer<FluidStack> setter
+    ) {
         if (tag.contains(key, Tag.TAG_COMPOUND)) {
-            setter.accept(FluidStack.loadFluidStackFromNBT(tag.getCompound(key)));
+            FluidStack stack = FluidStack.parseOptional(registries, tag.getCompound(key));
+            setter.accept(stack);
         }
     }
 
 
-    public static void setItemStackIfPresent(CompoundTag tag, String key, Consumer<ItemStack> setter) {
+    public static void setItemStackIfPresent(HolderLookup.Provider registries, CompoundTag tag, String key, Consumer<ItemStack> setter) {
         if (tag.contains(key, Tag.TAG_COMPOUND)) {
-            setter.accept(ItemStack.of(tag.getCompound(key)));
+            setter.accept(ItemStack.parseOptional(registries, tag.getCompound(key)));
         }
     }
 

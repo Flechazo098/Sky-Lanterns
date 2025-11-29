@@ -12,9 +12,7 @@ import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -26,15 +24,13 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.decoration.HangingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.entity.IEntityAdditionalSpawnData;
-import net.minecraftforge.network.NetworkHooks;
+import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
@@ -50,7 +46,7 @@ import java.util.UUID;
  * Date: 2022/2/12 7:51
  * Version: 1.0
  */
-public class SkyLanternEntity extends PathfinderMob implements IEntityAdditionalSpawnData {
+public class SkyLanternEntity extends Mob implements IEntityWithComplexSpawn, Leashable {
 
 
     private static final EntityDataAccessor<Byte> IS_LATCHED = SynchedEntityData.defineId(SkyLanternEntity.class, EntityDataSerializers.BYTE);
@@ -71,14 +67,11 @@ public class SkyLanternEntity extends PathfinderMob implements IEntityAdditional
     private BlockPos latched;
     private boolean hasCachedEntity;
     private UUID cachedEntityUUID;
+    private Leashable.LeashData leashData;
 
     public SkyLanternEntity(EntityType<SkyLanternEntity> type, Level level) {
-        super(ModEntities.SKY_LANTERN.get(), level);
-        //noCulling = true;
-
+        super(type, level);
         setPos(getX() + 0.5F, getY() + 3F, getZ() + 0.5F);
-        //setDeltaMovement(getDeltaMovement().x(), 0.04, getDeltaMovement().z());
-
     }
 
 
@@ -104,7 +97,7 @@ public class SkyLanternEntity extends PathfinderMob implements IEntityAdditional
             return null;
         }
         balloon.latchedEntity = entity;
-        float height = balloon.latchedEntity.getDimensions(balloon.latchedEntity.getPose()).height;
+        float height = balloon.latchedEntity.getDimensions(balloon.latchedEntity.getPose()).height();
         balloon.setPos(balloon.latchedEntity.getX(), balloon.latchedEntity.getY() + height + 1.7F, balloon.latchedEntity.getZ());
 
         balloon.xo = balloon.getX();
@@ -156,13 +149,13 @@ public class SkyLanternEntity extends PathfinderMob implements IEntityAdditional
     }
 
     @Override
-    protected void defineSynchedData() {
-        super.defineSynchedData();
-        entityData.define(IS_LATCHED, (byte) 0);
-        entityData.define(LATCHED_X, 0);
-        entityData.define(LATCHED_Y, 0);
-        entityData.define(LATCHED_Z, 0);
-        entityData.define(LATCHED_ID, -1);
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(IS_LATCHED, (byte) 0);
+        builder.define(LATCHED_X, 0);
+        builder.define(LATCHED_Y, 0);
+        builder.define(LATCHED_Z, 0);
+        builder.define(LATCHED_ID, -1);
     }
 
     @Override
@@ -355,7 +348,7 @@ public class SkyLanternEntity extends PathfinderMob implements IEntityAdditional
     }
 
     public double getAddedHeight() {
-        return latchedEntity.getDimensions(latchedEntity.getPose()).height + 0.8;
+        return latchedEntity.getDimensions(latchedEntity.getPose()).height() + 0.8;
     }
 
     private int getFloor(LivingEntity entity) {
@@ -397,6 +390,7 @@ public class SkyLanternEntity extends PathfinderMob implements IEntityAdditional
 
     @Override
     public void readAdditionalSaveData(CompoundTag compound) {
+        super.readAdditionalSaveData(compound);
         TagUtils.setEnumIfPresent(compound, "color", EnumColor::byIndexStatic, color -> this.color = color);
         TagUtils.setBlockPosIfPresent(compound, "latched", pos -> latched = pos);
         TagUtils.setUUIDIfPresent(compound, "owner", uuid -> {
@@ -405,11 +399,16 @@ public class SkyLanternEntity extends PathfinderMob implements IEntityAdditional
         });
 
         posLight = new BlockPos(compound.getInt("light_X"), compound.getInt("light_Y"), compound.getInt("light_Z"));
+        var data = super.readLeashData(compound);
+        if (data != null) {
+            this.setLeashData(data);
+        }
 
     }
 
     @Override
     public void addAdditionalSaveData(CompoundTag compound) {
+        super.addAdditionalSaveData(compound);
         compound.putInt("color", color.ordinal());
         if (latched != null) {
             compound.put("latched", NbtUtils.writeBlockPos(latched));
@@ -420,53 +419,52 @@ public class SkyLanternEntity extends PathfinderMob implements IEntityAdditional
         compound.putInt("light_X", posLight.getX());
         compound.putInt("light_Y", posLight.getY());
         compound.putInt("light_Z", posLight.getZ());
+        super.writeLeashData(compound, this.leashData);
+    }
 
-        if (this.getLeashHolder() != null) {
-            CompoundTag compoundtag2 = new CompoundTag();
-            if (this.getLeashHolder() instanceof LivingEntity) {
-                UUID uuid = this.getLeashHolder().getUUID();
-                compoundtag2.putUUID("UUID", uuid);
-            } else if (this.getLeashHolder() instanceof HangingEntity) {
-                BlockPos blockpos = ((HangingEntity) this.getLeashHolder()).getPos();
-                compoundtag2.putInt("X", blockpos.getX());
-                compoundtag2.putInt("Y", blockpos.getY());
-                compoundtag2.putInt("Z", blockpos.getZ());
-            }
 
-            compound.put("Leash", compoundtag2);
-        } else if (this.leashInfoTag != null) {
-            compound.put("Leash", this.leashInfoTag.copy());
-        }
+    @Override
+    public Leashable.LeashData getLeashData() {
+        return this.leashData;
     }
 
     @Override
-    protected void tickLeash() {
-        if (this.isLeashed() && this.getLeashHolder() != null && this.getLeashHolder().level() == this.level()) {
-            final Entity entity = this.getLeashHolder();
-            this.restrictTo(new BlockPos(entity.getBlockX(), entity.getBlockY(), entity.getBlockZ()), 5);
-            final float f = this.distanceTo(entity);
-            this.onLeashDistance(f);
-            if (f > 4.0F) {
-                double d0 = (entity.getX() - this.getX()) / (double) f;
-                double d1 = (entity.getY() - this.getY()) / (double) f;
-                double d2 = (entity.getZ() - this.getZ()) / (double) f;
-                this.setDeltaMovement(this.getDeltaMovement().add(Math.copySign(d0 * d0 * 0.1D, d0), Math.copySign(d1 * d1 * 0.03D, d1), Math.copySign(d2 * d2 * 0.1D, d2)));
-            }
+    public void setLeashData(@javax.annotation.Nullable Leashable.LeashData data) {
+        this.leashData = data;
+    }
+
+    @Override
+    public void closeRangeLeashBehaviour(Entity entity) {
+        this.restrictTo(new BlockPos(entity.getBlockX(), entity.getBlockY(), entity.getBlockZ()), 5);
+    }
+
+    @Override
+    public void elasticRangeLeashBehaviour(Entity leashHolder, float distance) {
+        double d0 = (leashHolder.getX() - this.getX()) / (double) distance;
+        double d1 = (leashHolder.getY() - this.getY()) / (double) distance;
+        double d2 = (leashHolder.getZ() - this.getZ()) / (double) distance;
+        this.setDeltaMovement(
+                this.getDeltaMovement().add(
+                        Math.copySign(d0 * d0 * 0.1D, d0),
+                        Math.copySign(d1 * d1 * 0.03D, d1),
+                        Math.copySign(d2 * d2 * 0.1D, d2)
+                )
+        );
+    }
+
+    @Override
+    public void leashTooFarBehaviour() {
+        Entity holder = this.getLeashHolder();
+        if (holder != null) {
+            float dist = this.distanceTo(holder);
+            this.elasticRangeLeashBehaviour(holder, dist);
         }
-        super.tickLeash();
     }
 
     @Override
     public float getLightLevelDependentMagicValue() {
         return 15728880;
     }
-
-    @Nonnull
-    @Override
-    public Packet<ClientGamePacketListener> getAddEntityPacket() {
-        return NetworkHooks.getEntitySpawningPacket(this);
-    }
-
 
     @Override
     public boolean skipAttackInteraction(@Nonnull Entity entity) {
@@ -475,7 +473,7 @@ public class SkyLanternEntity extends PathfinderMob implements IEntityAdditional
     }
 
     @Override
-    public void writeSpawnData(FriendlyByteBuf data) {
+    public void writeSpawnData(RegistryFriendlyByteBuf data) {
         data.writeDouble(getX());
         data.writeDouble(getY());
         data.writeDouble(getZ());
@@ -493,7 +491,7 @@ public class SkyLanternEntity extends PathfinderMob implements IEntityAdditional
     }
 
     @Override
-    public void readSpawnData(FriendlyByteBuf data) {
+    public void readSpawnData(RegistryFriendlyByteBuf data) {
         setPos(data.readDouble(), data.readDouble(), data.readDouble());
         color = data.readEnum(EnumColor.class);
         final byte type = data.readByte();
@@ -554,14 +552,9 @@ public class SkyLanternEntity extends PathfinderMob implements IEntityAdditional
 
 
     @Override
-    protected float getStandingEyeHeight(@Nonnull Pose pose, @Nonnull EntityDimensions size) {
-        return size.height - 0.5F;
-    }
-
-    @Nonnull
-    @Override
-    protected AABB getBoundingBoxForPose(@Nonnull Pose pose) {
-        return getBoundingBox(getDimensions(pose), getX(), getY(), getZ());
+    public EntityDimensions getDefaultDimensions(@Nonnull Pose pose) {
+        EntityDimensions dims = super.getDefaultDimensions(pose);
+        return dims.withEyeHeight(dims.height() - 0.5F);
     }
 
     @Override
@@ -571,9 +564,9 @@ public class SkyLanternEntity extends PathfinderMob implements IEntityAdditional
     }
 
     private AABB getBoundingBox(EntityDimensions size, double x, double y, double z) {
-        final float f = size.width / 2F;
+        final float f = size.width() / 2F;
         final double posY = y - 0.5F;
-        return new AABB(new Vec3(x - f, posY, z - f), new Vec3(x + f, posY + size.height, z + f));
+        return new AABB(new Vec3(x - f, posY, z - f), new Vec3(x + f, posY + size.height(), z + f));
     }
 
     @Override
@@ -610,7 +603,7 @@ public class SkyLanternEntity extends PathfinderMob implements IEntityAdditional
         latched = null;
         entityData.set(IS_LATCHED, (byte) 0);
         if (!level().isClientSide)
-            level().playSound(null, this, SoundEvents.ARMOR_EQUIP_LEATHER, SoundSource.NEUTRAL, 1F, 1F);
+            level().playSound(null, this, SoundEvents.ARMOR_EQUIP_LEATHER.value(), SoundSource.NEUTRAL, 1F, 1F);
     }
 
 

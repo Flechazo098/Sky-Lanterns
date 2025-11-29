@@ -8,7 +8,6 @@
   "vertex": "skylanterns:lantern_glow",
   "fragment": "skylanterns:lantern_glow",
   "attributes": ["Position", "Color", "UV0"],
-  "samplers": [],
   "uniforms": [
     {
       "name": "ModelViewMat",

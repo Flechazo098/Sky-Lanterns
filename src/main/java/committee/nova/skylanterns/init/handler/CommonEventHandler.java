@@ -1,9 +1,9 @@
 package committee.nova.skylanterns.init.handler;
 
 import committee.nova.skylanterns.SkyLanterns;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 
 /**
  * Description:
@@ -11,11 +11,11 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
  * Date: 2022/2/12 8:04
  * Version: 1.0
  */
-@Mod.EventBusSubscriber(modid = SkyLanterns.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = SkyLanterns.MOD_ID)
 public class CommonEventHandler {
 
     @SubscribeEvent
-    public void onCommonSetup(final FMLCommonSetupEvent event) {
+    public static void onCommonSetup(final FMLCommonSetupEvent event) {
 
     }
 }

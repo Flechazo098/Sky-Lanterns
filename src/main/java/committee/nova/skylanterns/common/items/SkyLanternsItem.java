@@ -61,7 +61,7 @@ public class SkyLanternsItem extends Item {
         if (player.isShiftKeyDown()) {
             if (!player.level().isClientSide) {
                 final AABB bound = new AABB(entity.getX() - 0.2, entity.getY() - 0.5, entity.getZ() - 0.2,
-                        entity.getX() + 0.2, entity.getY() + entity.getDimensions(entity.getPose()).height + 4, entity.getZ() + 0.2);
+                        entity.getX() + 0.2, entity.getY() + entity.getDimensions(entity.getPose()).height() + 4, entity.getZ() + 0.2);
                 final List<SkyLanternEntity> balloonsNear = player.level().getEntitiesOfClass(SkyLanternEntity.class, bound);
                 for (SkyLanternEntity balloon : balloonsNear) {
                     if (balloon.latchedEntity == entity) {

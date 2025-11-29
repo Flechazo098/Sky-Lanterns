@@ -23,7 +23,7 @@ import net.minecraft.resources.ResourceLocation;
 public class PaperLanternPinkModel extends EntityModel<SkyLanternEntity> {
 
     public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
-            new ResourceLocation(SkyLanterns.MOD_ID, "sky_lantern_pink"), "main");
+            ResourceLocation.fromNamespaceAndPath(SkyLanterns.MOD_ID, "sky_lantern_pink"), "main");
 
     private final ModelPart bottom;
     private final ModelPart top2;
@@ -120,17 +120,18 @@ public class PaperLanternPinkModel extends EntityModel<SkyLanternEntity> {
     public void setupAnim(SkyLanternEntity pEntity, float pLimbSwing, float pLimbSwingAmount, float pAgeInTicks, float pNetHeadYaw, float pHeadPitch) {
     }
 
+
     @Override
-    public void renderToBuffer(PoseStack pPoseStack, VertexConsumer pBuffer, int pPackedLight, int pPackedOverlay, float pRed, float pGreen, float pBlue, float pAlpha) {
-        bottom.render(pPoseStack, pBuffer, pPackedLight, pPackedOverlay, pRed, pGreen, pBlue, pAlpha);
-        top2.render(pPoseStack, pBuffer, pPackedLight, pPackedOverlay, pRed, pGreen, pBlue, pAlpha);
-        top3.render(pPoseStack, pBuffer, pPackedLight, pPackedOverlay, pRed, pGreen, pBlue, pAlpha);
-        top.render(pPoseStack, pBuffer, pPackedLight, pPackedOverlay, pRed, pGreen, pBlue, pAlpha);
-        top21.render(pPoseStack, pBuffer, pPackedLight, pPackedOverlay, pRed, pGreen, pBlue, pAlpha);
-        top31.render(pPoseStack, pBuffer, pPackedLight, pPackedOverlay, pRed, pGreen, pBlue, pAlpha);
-        front.render(pPoseStack, pBuffer, pPackedLight, pPackedOverlay, pRed, pGreen, pBlue, pAlpha);
-        left.render(pPoseStack, pBuffer, pPackedLight, pPackedOverlay, pRed, pGreen, pBlue, pAlpha);
-        right.render(pPoseStack, pBuffer, pPackedLight, pPackedOverlay, pRed, pGreen, pBlue, pAlpha);
-        back.render(pPoseStack, pBuffer, pPackedLight, pPackedOverlay, pRed, pGreen, pBlue, pAlpha);
+    public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int i, int i1, int i2) {
+        bottom.render(poseStack, vertexConsumer, i, i1, i2);
+        top2.render(poseStack, vertexConsumer, i, i1, i2);
+        top3.render(poseStack, vertexConsumer, i, i1, i2);
+        top.render(poseStack, vertexConsumer, i, i1, i2);
+        top21.render(poseStack, vertexConsumer, i, i1, i2);
+        top31.render(poseStack, vertexConsumer, i, i1, i2);
+        front.render(poseStack, vertexConsumer, i, i1, i2);
+        left.render(poseStack, vertexConsumer, i, i1, i2);
+        right.render(poseStack, vertexConsumer, i, i1, i2);
+        back.render(poseStack, vertexConsumer, i, i1, i2);
     }
 }
